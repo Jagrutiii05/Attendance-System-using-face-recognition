@@ -1,4 +1,7 @@
 import cv2
+import pickle
+import numpy as np
+import os
 
 # 0: for inbuilt camera, 1: for external webcam
 video = cv2.VideoCapture(0)
@@ -9,6 +12,7 @@ face_detect = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
 faces_data = []
 
 i=0
+name = input("Enter your name: ")
 
 while True:
     # video.read() method gives two values: 
@@ -46,3 +50,32 @@ while True:
         break
 video.release()
 cv2.destroyAllWindows()
+
+# convert data into numPy array
+faces_data = np.asarray(faces_data)
+faces_data = faces_data.reshape(100, -1)
+
+# store it into pickle file so that we can use it later
+
+# if names.pkl file is not available will create new file
+if 'names.pkl' not in os.listdir('data/'):
+    # all the 100 data captured will be named
+    names = [name]*100
+    with open('data/names.pkl', 'wb') as f:
+        pickle.dump(names, f)
+else:
+    with open('data/names.pkl', 'rb') as f:
+        names = pickle.load(f)
+    names += [name]*100
+    with open('data/names.pkl', 'wb') as f:
+        pickle.dump(names, f)
+
+if 'faces_data.pkl' not in os.listdir('data/'):
+    with open('data/faces_data.pkl', 'wb') as f:
+        pickle.dump(faces_data, f)
+else:
+    with open('data/faces_data.pkl', 'rb') as f:
+        faces = pickle.load(f)
+    faces = np.append(faces, faces_data, axis=0)
+    with open('data/faces_data.pkl', 'wb') as f:
+        pickle.dump(faces, f)
