@@ -25,6 +25,7 @@ with open('data/faces_data.pkl', 'rb') as f:
 # create KNN classifier and fit the model
 knn = KNeighborsClassifier(n_neighbors=5)
 knn.fit(faces, labels)
+threshold = 40
 
 # attendance CSV file columns
 col_names = ['Name', 'Time']
@@ -42,10 +43,20 @@ while True:
         # predict the label using trained KNN model
         output = knn.predict(resized_img)
 
+        # Get indices and distances to k-neighbors
+        indices, distances = knn.kneighbors(resized_img)
+
+        # Check if the minimum distance is below the threshold
+        if np.min(distances) < threshold:
+            output = knn.predict(resized_img)
+        else:
+            output = ["Unknown"]
+
+
         # current timestamp
         ts = time.time()
         date = datetime.fromtimestamp(ts).strftime("%d-%m-%Y")
-        timestamp = datetime.fromtimestamp(ts).strftime("%H:%M-%S")
+        timestamp = datetime.fromtimestamp(ts).strftime("%H:%M:%S")
 
         # to check if attendance CSV file for current date exists
         exist = os.path.isfile("Attendance/Attendance_" + date + ".csv")
@@ -54,7 +65,7 @@ while True:
         cv2.rectangle(frame, (x,y), (x+w, y+h), (143,143,255), 2)
         cv2.rectangle(frame,(x,y),(x+w,y+h),(143,143,255),2)
         cv2.rectangle(frame,(x,y-40),(x+w,y),(143,143,255),-1)
-        cv2.putText(frame, str(output[0]), (x,y-15), cv2.FONT_ITALIC, 1, (255,255,255), 2)
+        cv2.putText(frame, str(output[0]) + ": " + str(np.min(distances)) + ": " + str(np.max(distances)), (x,y-15), cv2.FONT_ITALIC, 1, (255,255,255), 2)
 
         # create an attendance record
         attendance=[str(output[0]), str(timestamp)]
